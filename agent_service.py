@@ -49,9 +49,14 @@ def build_translation_chain():
         temperature=0.2,
     )
     prompt = ChatPromptTemplate.from_template(
-        "Traduce del inglés al español el texto siguiente. "
-        "Conserva el formato, los párrafos y el sentido técnico. "
-        "Responde solo con la traducción.\n\nTexto:\n{texto}"
+        "Traduce del inglés al español el siguiente texto técnico. "
+        "Instrucciones importantes:\n"
+        "- Traduce grandes secciones de texto completo, no resumas\n"
+        "- Conserva exactamente el formato, estructura de párrafos, enumeraciones y tablas\n"
+        "- Mantiene terminología técnica y especializada precisa\n"
+        "- Traduce todos los detalles, cifras, nombres propios y referencias\n"
+        "- Responde ÚNICAMENTE con la traducción completa sin comentarios adicionales\n\n"
+        "Texto a traducir:\n{texto}"
     )
     return prompt | llm | StrOutputParser()
 
@@ -111,12 +116,12 @@ def validate_extracted_article(article: str) -> None:
 def translate_text(text: str) -> str:
     chain = build_translation_chain()
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=int(os.environ.get("TRANSLATION_CHUNK_SIZE", "100000")),
+        chunk_size=int(os.environ.get("TRANSLATION_CHUNK_SIZE", "500000")),
         chunk_overlap=0,
         separators=["\n\n", "\n", ". ", " ", ""],
     )
     chunks = splitter.split_text(text)
-    pause_seconds = float(os.environ.get("MIN_SECONDS_BETWEEN_REQUESTS", "13"))
+    pause_seconds = float(os.environ.get("MIN_SECONDS_BETWEEN_REQUESTS", "12"))
     translations = []
     for index, chunk in enumerate(chunks):
         if index:
