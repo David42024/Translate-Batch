@@ -121,12 +121,31 @@ def translate_text(text: str) -> str:
         separators=["\n\n", "\n", ". ", " ", ""],
     )
     chunks = splitter.split_text(text)
+    total_chunks = len(chunks)
     pause_seconds = float(os.environ.get("MIN_SECONDS_BETWEEN_REQUESTS", "12"))
+    
+    logger.info(f"🔄 Iniciando traducción por lotes: {total_chunks} chunks a procesar")
+    logger.info(f"📊 Tamaño total del texto: {len(text):,} caracteres")
+    logger.info(f"⏱️  Tiempo estimado: ~{total_chunks * pause_seconds / 60:.1f} minutos")
+    
     translations = []
     for index, chunk in enumerate(chunks):
+        chunk_num = index + 1
+        logger.info(f"📝 Procesando chunk {chunk_num}/{total_chunks} ({len(chunk):,} caracteres)")
+        
         if index:
+            logger.info(f"⏳ Esperando {pause_seconds}s antes de la siguiente consulta...")
             time.sleep(pause_seconds)
-        translations.append(chain.invoke({"texto": chunk}))
+        
+        try:
+            translated = chain.invoke({"texto": chunk})
+            translations.append(translated)
+            logger.info(f"✅ Chunk {chunk_num}/{total_chunks} completado")
+        except Exception as e:
+            logger.error(f"❌ Error en chunk {chunk_num}/{total_chunks}: {e}")
+            raise
+    
+    logger.info(f"🎉 Traducción completada: {total_chunks} chunks procesados")
     return "\n\n".join(translations)
 
 
@@ -147,7 +166,7 @@ def build_translation_agent() -> AgentExecutor:
     return AgentExecutor(
         agent=agent,
         tools=[translate_source_text],
-        verbose=False,
+        verbose=True,
         max_iterations=3,
     )
 

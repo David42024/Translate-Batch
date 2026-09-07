@@ -19,6 +19,14 @@
    - Enfoque en traducción completa vs resumen
    - Mantenimiento de formato y estructura detallados
 
+4. **Logging de progreso en tiempo real**:
+   - Muestra número de chunks a procesar
+   - Indica tamaño total del texto
+   - Calcula tiempo estimado de procesamiento
+   - Progreso individual de cada chunk con emojis
+   - Tiempos de espera entre consultas
+   - Modo verbose activado en AgentExecutor
+
 ## Variables de entorno recomendadas
 
 Si necesitas ajustar estos valores, crea un archivo `.env` con:
@@ -34,7 +42,24 @@ MIN_SECONDS_BETWEEN_REQUESTS=12
 - **Tiempo total**: Mayor tiempo por consulta pero menos consultas totales
 - **Límite de API**: Mejor aprovechamiento del límite de 5 consultas/minuto
 - **Calidad**: Traducción más coherente al procesar secciones más grandes
+- **Visibilidad**: Logging detallado en tiempo real del progreso
 
 ## Uso
 
 El sistema ahora procesará automáticamente más texto por chunk y respetará el límite de 5 consultas por minuto. No requiere cambios en Google Sheets ni en el flujo de trabajo.
+
+## Ver progreso en tiempo real
+
+Al ejecutar el servicio, verás logs como:
+```
+🔄 Iniciando traducción por lotes: 5 chunks a procesar
+📊 Tamaño total del texto: 125,000 caracteres
+⏱️  Tiempo estimado: ~1.0 minutos
+📝 Procesando chunk 1/5 (25,000 caracteres)
+✅ Chunk 1/5 completado
+⏳ Esperando 12s antes de la siguiente consulta...
+📝 Procesando chunk 2/5 (30,000 caracteres)
+✅ Chunk 2/5 completado
+...
+🎉 Traducción completada: 5 chunks procesados
+```
