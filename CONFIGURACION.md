@@ -10,10 +10,10 @@
    - Variable: `GEMINI_MODEL` (default: gemini-3.1-flash-lite)
    - **3x más consultas por minuto, 25x más consultas por día**
 
-2. **Aumento de CHUNK_SIZE**: 
-   - Antes: 100,000 caracteres
-   - Ahora: 500,000 caracteres (5x más texto por consulta)
-   - Variable: `TRANSLATION_CHUNK_SIZE` (default: 500000)
+2. **Ajuste de CHUNK_SIZE para visibilidad de lotes**:
+   - Antes: 500,000 caracteres (demasiado grande, un solo chunk)
+   - Ahora: 80,000 caracteres (múltiples chunks visibles)
+   - Variable: `TRANSLATION_CHUNK_SIZE` (default: 80000)
 
 3. **Ajuste de tiempo entre consultas**:
    - Antes: 13 segundos (~4.6 consultas/minuto)
@@ -46,7 +46,7 @@ MIN_SECONDS_BETWEEN_REQUESTS=4
 
 ## Impacto esperado
 
-- **Archivos de 20-30 páginas**: Reducción de ~20 consultas a ~4-6 consultas por archivo
+- **Archivos de 20-30 páginas**: Procesamiento en múltiples chunks visibles (~8-12 chunks por archivo)
 - **Velocidad**: 3x más rápido (15 vs 5 consultas/minuto)
 - **Capacidad diaria**: 25x más archivos por día (500 vs 20 RPD)
 - **Tiempo total**: Mucho menor tiempo de procesamiento

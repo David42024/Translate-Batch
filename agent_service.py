@@ -116,7 +116,7 @@ def validate_extracted_article(article: str) -> None:
 def translate_text(text: str) -> str:
     chain = build_translation_chain()
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=int(os.environ.get("TRANSLATION_CHUNK_SIZE", "500000")),
+        chunk_size=int(os.environ.get("TRANSLATION_CHUNK_SIZE", "80000")),
         chunk_overlap=0,
         separators=["\n\n", "\n", ". ", " ", ""],
     )
