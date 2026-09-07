@@ -42,7 +42,7 @@ def build_translation_chain():
     if not api_key:
         raise RuntimeError("Falta la variable de entorno GEMINI_API_KEY.")
 
-    model_name = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+    model_name = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
     llm = ChatGoogleGenerativeAI(
         model=model_name,
         google_api_key=api_key,
@@ -122,7 +122,7 @@ def translate_text(text: str) -> str:
     )
     chunks = splitter.split_text(text)
     total_chunks = len(chunks)
-    pause_seconds = float(os.environ.get("MIN_SECONDS_BETWEEN_REQUESTS", "12"))
+    pause_seconds = float(os.environ.get("MIN_SECONDS_BETWEEN_REQUESTS", "4"))
     
     print(f"🔄 Iniciando traducción por lotes: {total_chunks} chunks a procesar")
     print(f"📊 Tamaño total del texto: {len(text):,} caracteres")
