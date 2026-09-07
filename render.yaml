@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: traductor-batch
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn agent_service:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
+      - key: AGENT_TOKEN
+        sync: false
+      - key: LANGCHAIN_TRACING_V2
+        value: "true"
+      - key: LANGCHAIN_ENDPOINT
+        value: https://api.smith.langchain.com
+      - key: LANGCHAIN_API_KEY
+        sync: false
+      - key: LANGCHAIN_PROJECT
+        value: traductor-google-sheets
+      - key: LANGSMITH_TRACING
+        value: "true"
+      - key: LANGSMITH_ENDPOINT
+        value: https://api.smith.langchain.com
+      - key: LANGSMITH_API_KEY
+        sync: false
+      - key: LANGSMITH_PROJECT
+        value: traductor-google-sheets
+      - key: TRANSLATION_CHUNK_SIZE
+        value: "100000"
+      - key: MIN_SECONDS_BETWEEN_REQUESTS
+        value: "13"

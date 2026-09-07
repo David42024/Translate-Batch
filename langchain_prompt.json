@@ -1,0 +1,9 @@
+{
+  "name": "traductor-articulos-en-es",
+  "description": "Prompt para traducir artículos y fragmentos técnicos de inglés a español.",
+  "input_variables": ["texto"],
+  "template": "Traduce del inglés al español el texto siguiente. Conserva el formato, los párrafos y el sentido técnico. Responde solo con la traducción.\n\nTexto:\n{texto}",
+  "model": "gemini-3.6-flash",
+  "temperature": 0.2,
+  "output_parser": "StrOutputParser"
+}

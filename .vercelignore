@@ -1,0 +1,11 @@
+.env
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.git/
+.vercel/
+node_modules/
+app.py
+README.md
+langchain_prompt.json
