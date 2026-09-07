@@ -26,6 +26,7 @@
    - Progreso individual de cada chunk con emojis
    - Tiempos de espera entre consultas
    - Modo verbose activado en AgentExecutor
+   - `print()` statements para visibilidad universal en cualquier entorno
 
 ## Variables de entorno recomendadas
 

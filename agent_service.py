@@ -124,6 +124,9 @@ def translate_text(text: str) -> str:
     total_chunks = len(chunks)
     pause_seconds = float(os.environ.get("MIN_SECONDS_BETWEEN_REQUESTS", "12"))
     
+    print(f"🔄 Iniciando traducción por lotes: {total_chunks} chunks a procesar")
+    print(f"📊 Tamaño total del texto: {len(text):,} caracteres")
+    print(f"⏱️  Tiempo estimado: ~{total_chunks * pause_seconds / 60:.1f} minutos")
     logger.info(f"🔄 Iniciando traducción por lotes: {total_chunks} chunks a procesar")
     logger.info(f"📊 Tamaño total del texto: {len(text):,} caracteres")
     logger.info(f"⏱️  Tiempo estimado: ~{total_chunks * pause_seconds / 60:.1f} minutos")
@@ -131,20 +134,25 @@ def translate_text(text: str) -> str:
     translations = []
     for index, chunk in enumerate(chunks):
         chunk_num = index + 1
+        print(f"📝 Procesando chunk {chunk_num}/{total_chunks} ({len(chunk):,} caracteres)")
         logger.info(f"📝 Procesando chunk {chunk_num}/{total_chunks} ({len(chunk):,} caracteres)")
         
         if index:
+            print(f"⏳ Esperando {pause_seconds}s antes de la siguiente consulta...")
             logger.info(f"⏳ Esperando {pause_seconds}s antes de la siguiente consulta...")
             time.sleep(pause_seconds)
         
         try:
             translated = chain.invoke({"texto": chunk})
             translations.append(translated)
+            print(f"✅ Chunk {chunk_num}/{total_chunks} completado")
             logger.info(f"✅ Chunk {chunk_num}/{total_chunks} completado")
         except Exception as e:
+            print(f"❌ Error en chunk {chunk_num}/{total_chunks}: {e}")
             logger.error(f"❌ Error en chunk {chunk_num}/{total_chunks}: {e}")
             raise
     
+    print(f"🎉 Traducción completada: {total_chunks} chunks procesados")
     logger.info(f"🎉 Traducción completada: {total_chunks} chunks procesados")
     return "\n\n".join(translations)
 
