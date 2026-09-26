@@ -9,4 +9,4 @@ requests==2.32.3
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
 python-dotenv==1.0.1
-langsmith>=0.1.17,<0.2.0
+langsmith>=0.1.17,<0.2.0python-multipart

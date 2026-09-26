@@ -10,7 +10,7 @@ from typing import Any
 import requests
 import trafilatura
 from dotenv import load_dotenv
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Form, UploadFile, File
 from langchain.agents import AgentExecutor
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.agents import AgentFinish
@@ -21,20 +21,12 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langsmith import traceable
 from pypdf import PdfReader
-from pydantic import BaseModel
 
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 app = FastAPI(title="Agente traductor de artículos")
-
-
-class ProcessRequest(BaseModel):
-    source_url: str | None = None
-    source_text: str | None = None
-    pdf_base64: str | None = None
-    fragment: str | None = None
 
 
 def build_translation_chain():
@@ -88,15 +80,6 @@ def extract_article(url: str) -> str:
     )
     if not article:
         raise ValueError("No se pudo extraer texto legible del enlace.")
-    validate_extracted_article(article)
-    return article
-
-
-def extract_pdf_bytes(pdf_base64: str) -> str:
-    reader = PdfReader(io.BytesIO(base64.b64decode(pdf_base64)))
-    article = "\n\n".join(page.extract_text() or "" for page in reader.pages).strip()
-    if not article:
-        raise ValueError("No se pudo extraer texto del PDF guardado en Drive.")
     validate_extracted_article(article)
     return article
 
@@ -205,32 +188,38 @@ def health() -> dict[str, str]:
 
 @app.post("/process")
 def process(
-    request: ProcessRequest,
+    source_url: str | None = Form(None),
+    source_text: str | None = Form(None),
+    fragment: str | None = Form(None),
+    pdf_file: UploadFile = File(None),
     authorization: str | None = Header(default=None),
 ) -> dict[str, Any]:
     check_token(authorization)
-    if not request.source_url and not request.source_text and not request.pdf_base64 and not request.fragment:
-        raise HTTPException(status_code=400, detail="No hay enlace ni fragmento.")
+    if not source_url and not source_text and not pdf_file and not fragment:
+        raise HTTPException(status_code=400, detail="No hay enlace, archivo ni fragmento.")
 
     try:
-        if request.source_text:
-            validate_extracted_article(request.source_text)
+        if source_text:
+            validate_extracted_article(source_text)
+            
+        pdf_text = None
+        if pdf_file and pdf_file.filename:
+            reader = PdfReader(pdf_file.file)
+            pdf_text = "\n\n".join(page.extract_text() or "" for page in reader.pages).strip()
+            if not pdf_text:
+                raise ValueError("No se pudo extraer texto del PDF subido.")
+            validate_extracted_article(pdf_text)
+
+        target_text = source_text if source_text else (pdf_text if pdf_text else extract_article(source_url) if source_url else None)
+        
         translated_article = (
-                translate_with_agent(
-                request.source_text
-                if request.source_text
-                else (
-                    extract_pdf_bytes(request.pdf_base64)
-                    if request.pdf_base64
-                    else extract_article(request.source_url)
-                )
-            )
-            if request.source_url or request.source_text or request.pdf_base64
+            translate_with_agent(target_text)
+            if target_text
             else None
         )
         translated_fragment = (
-            translate_with_agent(request.fragment)
-            if request.fragment and request.fragment.strip()
+            translate_with_agent(fragment)
+            if fragment and fragment.strip()
             else None
         )
         return {
