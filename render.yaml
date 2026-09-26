@@ -29,6 +29,6 @@ services:
       - key: LANGSMITH_PROJECT
         value: traductor-google-sheets
       - key: TRANSLATION_CHUNK_SIZE
-        value: "100000"
+        value: "15000"
       - key: MIN_SECONDS_BETWEEN_REQUESTS
         value: "13"
