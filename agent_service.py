@@ -148,7 +148,7 @@ def _translate_agent_chunk(chunk: str) -> str:
 def translate_with_agent(text: str) -> str:
     """Procesa el texto en lotes y traduce cada chunk invocando al agente trazado por LangSmith."""
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size=int(os.environ.get("TRANSLATION_CHUNK_SIZE", "80000")),
+        chunk_size=int(os.environ.get("TRANSLATION_CHUNK_SIZE", "15000")),
         chunk_overlap=0,
         separators=["\n\n", "\n", ". ", " ", ""],
     )
