@@ -113,8 +113,40 @@ def validate_extracted_article(article: str) -> None:
         )
 
 
-def translate_text(text: str) -> str:
-    chain = build_translation_chain()
+def build_translation_agent() -> AgentExecutor:
+    @tool
+    def translate_source_text(text: str) -> str:
+        """Traduce al español un artículo o fragmento técnico escrito en inglés."""
+        chain = build_translation_chain()
+        return chain.invoke({"texto": text})
+
+    def run_translation_tool(inputs: dict[str, Any]) -> AgentFinish:
+        translated = translate_source_text.invoke(inputs["input"])
+        return AgentFinish(
+            return_values={"output": translated},
+            log="La herramienta de traducción procesó la entrada.",
+        )
+
+    agent = RunnableLambda(run_translation_tool)
+    return AgentExecutor(
+        agent=agent,
+        tools=[translate_source_text],
+        verbose=True,
+        max_iterations=3,
+    )
+
+
+@traceable(name="traductor-agent-chunk", run_type="chain")
+def _translate_agent_chunk(chunk: str) -> str:
+    result = build_translation_agent().invoke({
+        "input": "Traduce el siguiente texto conservando formato y terminología técnica:\n\n"
+        + chunk,
+    })
+    return result["output"]
+
+
+def translate_with_agent(text: str) -> str:
+    """Procesa el texto en lotes y traduce cada chunk invocando al agente trazado por LangSmith."""
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=int(os.environ.get("TRANSLATION_CHUNK_SIZE", "80000")),
         chunk_overlap=0,
@@ -143,7 +175,8 @@ def translate_text(text: str) -> str:
             time.sleep(pause_seconds)
         
         try:
-            translated = chain.invoke({"texto": chunk})
+            # Aquí llamamos al agente para cada chunk, manteniendo las trazas en LangSmith pequeñas
+            translated = _translate_agent_chunk(chunk)
             translations.append(translated)
             print(f"✅ Chunk {chunk_num}/{total_chunks} completado")
             logger.info(f"✅ Chunk {chunk_num}/{total_chunks} completado")
@@ -155,37 +188,6 @@ def translate_text(text: str) -> str:
     print(f"🎉 Traducción completada: {total_chunks} chunks procesados")
     logger.info(f"🎉 Traducción completada: {total_chunks} chunks procesados")
     return "\n\n".join(translations)
-
-
-def build_translation_agent() -> AgentExecutor:
-    @tool
-    def translate_source_text(text: str) -> str:
-        """Traduce al español un artículo o fragmento técnico escrito en inglés."""
-        return translate_text(text)
-
-    def run_translation_tool(inputs: dict[str, Any]) -> AgentFinish:
-        translated = translate_source_text.invoke(inputs["input"])
-        return AgentFinish(
-            return_values={"output": translated},
-            log="La herramienta de traducción procesó la entrada.",
-        )
-
-    agent = RunnableLambda(run_translation_tool)
-    return AgentExecutor(
-        agent=agent,
-        tools=[translate_source_text],
-        verbose=True,
-        max_iterations=3,
-    )
-
-
-@traceable(name="traductor-agent", run_type="chain")
-def translate_with_agent(text: str) -> str:
-    result = build_translation_agent().invoke({
-        "input": "Traduce el siguiente texto conservando formato y terminología técnica:\n\n"
-        + text,
-    })
-    return result["output"]
 
 
 def check_token(authorization: str | None) -> None:
